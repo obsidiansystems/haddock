@@ -134,7 +134,8 @@ createIfaces verbosity modules flags instIfaceMap = do
   (ifaces, _, !ms) <- foldM f ([], Map.empty, emptyModuleSet) sortedMods
   return (reverse ifaces, ms)
   where
-    f (ifaces, ifaceMap, !ms) modSummary = do
+    f state (InstantiationNode _) = pure state
+    f (ifaces, ifaceMap, !ms) (ModuleNode modSummary) = do
       x <- {-# SCC processModule #-}
            withTimingD "processModule" (const ()) $ do
              processModule verbosity modSummary flags ifaceMap instIfaceMap
