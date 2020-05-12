@@ -393,8 +393,13 @@ synifyDataCon use_gadt_syntax dc =
            else return $ noLoc $
               ConDeclH98 { con_ext    = noExtField
                          , con_name   = name
-                         , con_forall = noLoc False
-                         , con_ex_tvs = map synifyTyVar ex_tvs
+                         , con_ex_tvs = case map synifyTyVar ex_tvs of
+                             -- We choose no explicit forall if there are no
+                             -- existentially-quantified variables, as
+                             -- evidentally we don't have access to the user's
+                             -- own choice.
+                             [] -> Nothing
+                             ex_tvs'@(_:_) -> Just ex_tvs'
                          , con_mb_cxt = ctx
                          , con_args   = hat
                          , con_doc    = Nothing }

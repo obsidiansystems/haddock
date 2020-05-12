@@ -821,12 +821,11 @@ ppShortConstrParts :: Bool -> Bool -> ConDecl DocNameI -> Unicode -> Qualificati
 ppShortConstrParts summary dataInst con unicode qual
   = case con of
       ConDeclH98{ con_args = det
-                , con_ex_tvs = vars
+                , con_ex_tvs = mb_vars
                 , con_mb_cxt = cxt
-                } -> let tyVars = map (getName . hsLTyVarNameI) vars
+                } -> let mb_tyVars = (fmap . map) (getName . hsLTyVarNameI) mb_vars
                          context = unLoc (fromMaybe (noLoc []) cxt)
-                         forall_ = False
-                         header_ = ppConstrHdr forall_ tyVars context unicode qual
+                         header_ = ppConstrHdr mb_tyVars context unicode qual
                      in case det of
 
         -- Prefix constructor, e.g. 'Just a'
@@ -894,12 +893,11 @@ ppSideBySideConstr subdocs fixities unicode pkg qual (L _ con)
 
     decl = case con of
       ConDeclH98{ con_args = det
-                , con_ex_tvs = vars
+                , con_ex_tvs = mb_vars
                 , con_mb_cxt = cxt
-                } -> let tyVars = map (getName . hsLTyVarNameI) vars
+                } -> let mb_tyVars = (fmap . map) (getName . hsLTyVarNameI) mb_vars
                          context = unLoc (fromMaybe (noLoc []) cxt)
-                         forall_ = False
-                         header_ = ppConstrHdr forall_ tyVars context unicode qual
+                         header_ = ppConstrHdr mb_tyVars context unicode qual
                      in case det of
         -- Prefix constructor, e.g. 'Just a'
         PrefixCon args
@@ -966,15 +964,14 @@ ppSideBySideConstr subdocs fixities unicode pkg qual (L _ con)
 
 
 -- ppConstrHdr is for (non-GADT) existentials constructors' syntax
-ppConstrHdr :: Bool               -- ^ print explicit foralls
-            -> [Name]             -- ^ type variables
+ppConstrHdr :: Maybe [Name]       -- ^ type variables for explicit forall
             -> HsContext DocNameI -- ^ context
             -> Unicode -> Qualification -> Html
-ppConstrHdr forall_ tvs ctxt unicode qual = ppForall +++ ppCtxt
+ppConstrHdr forall_tvs ctxt unicode qual = ppForall +++ ppCtxt
   where
-    ppForall
-      | null tvs || not forall_ = noHtml
-      | otherwise = forallSymbol unicode
+    ppForall = case forall_tvs of
+      Nothing -> noHtml
+      Just tvs -> forallSymbol unicode
                       <+> hsep (map (ppName Prefix) tvs)
                       <+> toHtml ". "
 

@@ -462,7 +462,7 @@ renameCon decl@(ConDeclH98 { con_name = lname, con_ex_tvs = ltyvars
                            , con_mb_cxt = lcontext, con_args = details
                            , con_doc = mbldoc }) = do
       lname'    <- renameL lname
-      ltyvars'  <- mapM renameLTyVarBndr ltyvars
+      ltyvars'  <- (mapM . mapM) renameLTyVarBndr ltyvars
       lcontext' <- traverse renameLContext lcontext
       details'  <- renameDetails details
       mbldoc'   <- mapM renameLDocHsSyn mbldoc

@@ -722,15 +722,14 @@ ppDataDecl pats instances subdocs doc dataDecl unicode =
 
 
 -- ppConstrHdr is for (non-GADT) existentials constructors' syntax
-ppConstrHdr :: Bool -> [Name] -> HsContext DocNameI -> Bool -> LaTeX
-ppConstrHdr forall tvs ctxt unicode
- = (if null tvs then empty else ppForall)
-   <+>
+ppConstrHdr :: Maybe [Name] -> HsContext DocNameI -> Bool -> LaTeX
+ppConstrHdr forall_tvs ctxt unicode
+ = ppForall <+>
    (if null ctxt then empty else ppContextNoArrow ctxt unicode <+> darrow unicode <+> text " ")
   where
-    ppForall = case forall of
-      True  -> forallSymbol unicode <+> hsep (map ppName tvs) <+> text ". "
-      False -> empty
+    ppForall = case forall_tvs of
+      Just tvs -> forallSymbol unicode <+> hsep (map ppName tvs) <+> text ". "
+      Nothing  -> empty
 
 
 -- | Pretty-print a constructor
@@ -759,12 +758,11 @@ ppSideBySideConstr subdocs unicode leader (L _ con) =
     -- First line of the constructor (no doc, no fields, single-line)
     decl = case con of
       ConDeclH98{ con_args = det
-                , con_ex_tvs = vars
+                , con_ex_tvs = mb_vars
                 , con_mb_cxt = cxt
-                } -> let tyVars = map (getName . hsLTyVarNameI) vars
+                } -> let mb_tyVars = (fmap . map) (getName . hsLTyVarNameI) mb_vars
                          context = unLoc (fromMaybe (noLoc []) cxt)
-                         forall_ = False
-                         header_ = ppConstrHdr forall_ tyVars context unicode
+                         header_ = ppConstrHdr mb_tyVars context unicode
                      in case det of
         -- Prefix constructor, e.g. 'Just a'
         PrefixCon args
