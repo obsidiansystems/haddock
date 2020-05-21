@@ -135,7 +135,7 @@ createIfaces verbosity modules flags instIfaceMap = do
   return (reverse ifaces, ms)
   where
     f state (InstantiationNode _) = pure state
-    f (ifaces, ifaceMap, !ms) (ModuleNode modSummary) = do
+    f (ifaces, ifaceMap, !ms) (ModuleNode modSummary _) = do
       x <- {-# SCC processModule #-}
            withTimingD "processModule" (const ()) $ do
              processModule verbosity modSummary flags ifaceMap instIfaceMap
